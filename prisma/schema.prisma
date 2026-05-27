@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String?
+  createdAt DateTime @default(now())
+  sites     Site[]
+  content   ContentItem[]
+}
+
+model Site {
+  id        String   @id @default(uuid())
+  url       String   @unique
+  name      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  analyses  Analysis[]
+  agents    AgentTask[]
+}
+
+model Analysis {
+  id        String   @id @default(uuid())
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id])
+  url       String
+  score     Int?
+  issues    Int      @default(0)
+  issuesJson String  @default("[]")
+  title     String?
+  description String?
+  headingsJson String @default("[]")
+  linksCount Int     @default(0)
+  imagesCount Int    @default(0)
+  loadTimeMs Int?
+  createdAt DateTime @default(now())
+}
+
+model AgentTask {
+  id        String   @id @default(uuid())
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id])
+  agentType String
+  status    String   @default("pending")
+  title     String
+  content   String?  @default("")
+  metadata  String?  @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  completedAt DateTime?
+}
+
+model ContentItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  agentType String
+  title     String
+  body      String
+  status    String   @default("draft")
+  platform  String?
+  createdAt DateTime @default(now())
+  publishedAt DateTime?
+}
+
+model Setting {
+  id    String @id @default("global")
+  key   String @unique
+  value String
+}
