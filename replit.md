@@ -1,44 +1,60 @@
-# [Project name]
+# GrowthOS
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+AI-powered growth marketing platform with 6 autonomous agents: SEO optimizer, GEO strategist, content writer, Reddit scout, HN launcher, and X presence.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/growthos run dev` — run the frontend (Vite)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Optional env: `OPENROUTER_API_KEY` — for AI content generation (OpenRouter)
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite, Tailwind v4, wouter (routing)
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
+- AI: OpenRouter (google/gemma-3-12b-it:free by default)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/growthos/` — React + Vite frontend at `/`
+  - `src/app/` — page components (Next.js style dirs, now client-only)
+  - `src/components/layout/` — landing page sections (Header, Hero, etc.)
+  - `src/components/agents/` — AgentGrid component
+  - `src/index.css` — Tailwind v4 theme (emerald green primary, dark navy)
+- `artifacts/api-server/src/routes/` — Express API routes
+  - `agents.ts` — GET `/api/agents/:type`, POST `/api/agents/:type/generate`
+  - `dashboard.ts` — GET `/api/dashboard`
+  - `analyze.ts` — POST `/api/analyze` (SEO analysis via cheerio)
+- `lib/db/src/schema/growthos.ts` — Drizzle schema (users, sites, analyses, agent_tasks, content_items)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Migrated from Next.js → Vite + React + wouter. All pages are client-rendered.
+- SQLite (better-sqlite3) replaced with PostgreSQL + Drizzle ORM for Replit compatibility.
+- API routes (formerly Next.js `app/api/`) moved to Express in `artifacts/api-server/`.
+- OpenRouter AI key optional — generate endpoints return error if `OPENROUTER_API_KEY` unset.
+- `"use client"` and `"use server"` directives left in files (ignored by Vite, harmless).
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Landing page: Hero, 6 agent cards, features, pricing (Starter $49, Growth $99, Scale $249), CTA
+- Dashboard: KPI cards, agent status grid, recent activity feed, sites list
+- Agent pages: per-agent task list, generated content, AI generation button
+- Analyze endpoint: crawls a URL with cheerio, returns SEO score + issues, seeds agent tasks
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The `OPENROUTER_API_KEY` secret must be set for AI generation to work. Without it, generate endpoints return a 500.
+- `lib/db/src/schema/index.ts` exports all tables — add new tables there.
+- Tailwind v4 uses `@theme` block (not `tailwind.config.js`) — do not create a `postcss.config.mjs`.
+- `useParams()` is from `wouter`, not `next/navigation`.
 
 ## Pointers
 
