@@ -18,8 +18,8 @@ import { AGENTS, AgentConfig } from "@/constants/agents";
 function AgentCard({ agent, onPress }: { agent: AgentConfig; onPress: () => void }) {
   const colors = useColors();
   const ck = agent.colorKey;
-  const color = (colors as Record<string, string>)[`agent${ck}`];
-  const bg = (colors as Record<string, string>)[`agent${ck}Bg`];
+  const color = colors.colorOf(`agent${ck}`);
+  const bg = colors.colorOf(`agent${ck}Bg`);
 
   return (
     <Pressable

@@ -73,8 +73,9 @@ export default function AgentDetailScreen() {
 
   const agent = AGENT_MAP[type as AgentType];
   const ck = agent?.colorKey ?? "Blue";
-  const agentColor = (colors as Record<string, string>)[`agent${ck}`] ?? colors.primary;
-  const agentBg = (colors as Record<string, string>)[`agent${ck}Bg`] ?? colors.muted;
+  const colorMap = colors as unknown as Record<string, string>;
+  const agentColor = colorMap[`agent${ck}`] ?? colors.primary;
+  const agentBg = colorMap[`agent${ck}Bg`] ?? colors.muted;
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery<AgentData>({
     queryKey: ["agent", type],
@@ -204,7 +205,7 @@ export default function AgentDetailScreen() {
             data.tasks.map((task, idx) => {
               const statusColor =
                 task.status === "completed" ? colors.primary :
-                task.status === "running" ? (colors as Record<string, string>).agentBlue :
+                task.status === "running" ? colors.colorOf("agentBlue") :
                 task.status === "failed" ? colors.destructive :
                 colors.mutedForeground;
               const iconName = STATUS_ICON[task.status] ?? "clock";

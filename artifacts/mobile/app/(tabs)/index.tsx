@@ -67,10 +67,11 @@ function AgentColorBadge({ agentType, colors }: { agentType: string; colors: Ret
   const config = AGENT_MAP[agentType as AgentType];
   if (!config) return null;
   const ck = config.colorKey;
-  const color = (colors as Record<string, string>)[`agent${ck}`];
-  const bg = (colors as Record<string, string>)[`agent${ck}Bg`];
+  const color = colors.colorOf(`agent${ck}`);
+  const bg = colors.colorOf(`agent${ck}Bg`);
+  const s = makeStyles(colors);
   return (
-    <View style={[styles.agentDot, { backgroundColor: bg, borderColor: color + "40" }]}>
+    <View style={[s.agentDot, { backgroundColor: bg, borderColor: color + "40" }]}>
       <Feather name={config.icon as never} size={10} color={color} />
     </View>
   );
@@ -79,7 +80,7 @@ function AgentColorBadge({ agentType, colors }: { agentType: string; colors: Ret
 function StatusDot({ status, colors }: { status: string; colors: ReturnType<typeof useColors> }) {
   const color =
     status === "completed" ? colors.primary :
-    status === "running" ? (colors as Record<string, string>).agentBlue :
+    status === "running" ? colors.colorOf("agentBlue") :
     status === "failed" ? colors.destructive :
     colors.mutedForeground;
   const icon = STATUS_ICON[status] ?? "clock";
@@ -135,9 +136,9 @@ export default function DashboardScreen() {
 
   const kpis = [
     { label: "Sites", value: String(data.sites.length), icon: "globe", color: colors.primary, bg: colors.primary + "18" },
-    { label: "SEO Score", value: `${avgScore}`, suffix: "/100", icon: "bar-chart-2", color: (colors as Record<string, string>).agentBlue, bg: (colors as Record<string, string>).agentBlueBg },
-    { label: "Running", value: String(runningTasks), icon: "activity", color: (colors as Record<string, string>).agentPurple, bg: (colors as Record<string, string>).agentPurpleBg },
-    { label: "Content", value: String(data.contentGenerated), icon: "file-text", color: (colors as Record<string, string>).agentAmber, bg: (colors as Record<string, string>).agentAmberBg },
+    { label: "SEO Score", value: `${avgScore}`, suffix: "/100", icon: "bar-chart-2", color: colors.colorOf("agentBlue"), bg: colors.colorOf("agentBlueBg") },
+    { label: "Running", value: String(runningTasks), icon: "activity", color: colors.colorOf("agentPurple"), bg: colors.colorOf("agentPurpleBg") },
+    { label: "Content", value: String(data.contentGenerated), icon: "file-text", color: colors.colorOf("agentAmber"), bg: colors.colorOf("agentAmberBg") },
   ];
 
   const agentTypes: AgentType[] = ["seo", "geo", "writer", "reddit", "hackernews", "x"];
@@ -182,8 +183,8 @@ export default function DashboardScreen() {
           const agent = AGENT_MAP[type];
           const count = data.agentCounts[type] ?? 0;
           const ck = agent.colorKey;
-          const color = (colors as Record<string, string>)[`agent${ck}`];
-          const bg = (colors as Record<string, string>)[`agent${ck}Bg`];
+          const color = colors.colorOf(`agent${ck}`);
+          const bg = colors.colorOf(`agent${ck}Bg`);
           return (
             <Pressable
               key={type}
@@ -251,7 +252,7 @@ export default function DashboardScreen() {
                   <View style={s.siteScore}>
                     <Text style={[s.scoreNum, {
                       color: site.lastAnalysis.score >= 80 ? colors.primary :
-                        site.lastAnalysis.score >= 50 ? (colors as Record<string, string>).agentAmber :
+                        site.lastAnalysis.score >= 50 ? colors.colorOf("agentAmber") :
                           colors.destructive
                     }]}>{site.lastAnalysis.score}</Text>
                     <Text style={s.scoreSuffix}>/100</Text>
