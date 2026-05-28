@@ -1,1 +1,2 @@
 - [Expo mobile workflow detection](expo-mobile-workflow-detection.md) — kind="mobile" detection always fails: checks Expo relay (unreachable from container), not local port. QR-code native experience still works.
+- [GitHub sync workflow](github-sync-workflow.md) — git fetch/pull/commit all blocked; use GitHub API to pull changes + inline-token URL to push. Compare API needs GitHub SHAs (Replit checkpoint SHAs return 404).
