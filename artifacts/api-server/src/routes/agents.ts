@@ -56,7 +56,7 @@ async function askAi(prompt: string): Promise<string> {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "google/gemma-3-12b-it:free",
+      model: "nvidia/nemotron-3-nano-30b-a3b:free",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 512,
     }),

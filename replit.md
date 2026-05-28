@@ -18,7 +18,7 @@ AI-powered growth marketing platform with 6 autonomous agents: SEO optimizer, GE
 - Frontend: React + Vite, Tailwind v4, wouter (routing)
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
-- AI: OpenRouter (google/gemma-3-12b-it:free by default)
+- AI: OpenRouter (nvidia/nemotron-3-nano-30b-a3b:free by default)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
