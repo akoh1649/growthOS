@@ -12,6 +12,7 @@ import {
 
 const agents = [
   {
+    type: "seo",
     icon: Search,
     name: "SEO Optimizer",
     description:
@@ -22,6 +23,7 @@ const agents = [
     text: "text-blue-400",
   },
   {
+    type: "geo",
     icon: Brain,
     name: "GEO Strategist",
     description:
@@ -32,6 +34,7 @@ const agents = [
     text: "text-purple-400",
   },
   {
+    type: "writer",
     icon: PenLine,
     name: "Content Writer",
     description:
@@ -42,6 +45,7 @@ const agents = [
     text: "text-amber-400",
   },
   {
+    type: "reddit",
     icon: MessageCircle,
     name: "Reddit Scout",
     description:
@@ -52,6 +56,7 @@ const agents = [
     text: "text-orange-400",
   },
   {
+    type: "hackernews",
     icon: Newspaper,
     name: "HN Launcher",
     description:
@@ -62,6 +67,7 @@ const agents = [
     text: "text-red-400",
   },
   {
+    type: "x",
     icon: AtSign,
     name: "X Presence",
     description:
@@ -92,9 +98,10 @@ export function AgentsSection() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {agents.map((agent) => (
-            <div
+            <a
               key={agent.name}
-              className={`group relative rounded-2xl p-6 border ${agent.border} ${agent.bg} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] cursor-pointer`}
+              href={`/agents/${agent.type}`}
+              className={`group relative rounded-2xl p-6 border ${agent.border} ${agent.bg} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] no-underline`}
             >
               <div className={`w-12 h-12 rounded-xl ${agent.bg} border ${agent.border} flex items-center justify-center mb-4`}>
                 <agent.icon className={`w-6 h-6 ${agent.text}`} />
@@ -104,7 +111,7 @@ export function AgentsSection() {
               <div className="mt-4 flex items-center gap-1 text-xs text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
                 View activity log <ArrowRight className="w-3 h-3" />
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
