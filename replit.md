@@ -18,7 +18,11 @@ AI-powered growth marketing platform with 6 autonomous agents: SEO optimizer, GE
 - Frontend: React + Vite, Tailwind v4, wouter (routing)
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
-- AI: OpenRouter (nvidia/nemotron-3-nano-30b-a3b:free by default)
+- AI: OpenRouter — per-agent model routing:
+  - SEO/GEO: deepseek/deepseek-v4-flash
+  - Writer/HN: google/gemma-4-26b-a4b-it
+  - Reddit/X: qwen/qwen3.6-flash
+  - Override all agents: set OPENROUTER_MODEL env var
 - Build: esbuild (CJS bundle)
 
 ## Where things live

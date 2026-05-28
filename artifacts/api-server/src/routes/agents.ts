@@ -44,20 +44,31 @@ const GENERATE_PROMPTS: Record<string, (siteName?: string) => string> = {
     `Write a tweet thread (5-7 tweets) for "${site}" that drives engagement. Hook tweet, valuable insights, clear call-to-action. Professional but approachable tone.`,
 };
 
-const DEFAULT_MODEL = "nvidia/nemotron-3-nano-30b-a3b:free";
+const FALLBACK_MODEL = "google/gemma-4-26b-a4b-it";
+
+const AGENT_MODELS: Record<string, string> = {
+  seo:         "deepseek/deepseek-v4-flash",
+  geo:         "deepseek/deepseek-v4-flash",
+  writer:      "google/gemma-4-26b-a4b-it",
+  reddit:      "qwen/qwen3.6-flash",
+  hackernews:  "google/gemma-4-26b-a4b-it",
+  x:           "qwen/qwen3.6-flash",
+};
 
 export function aiKeyConfigured(): boolean {
   return !!(process.env.OPENROUTER_API_KEY ?? "");
 }
 
-async function askAi(prompt: string): Promise<string> {
+async function askAi(prompt: string, agentType?: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY ?? "";
   if (!apiKey) {
     throw new Error(
       "OPENROUTER_API_KEY is not set. Add it in the Replit Secrets panel to enable AI generation."
     );
   }
-  const model = process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
+  const model =
+    process.env.OPENROUTER_MODEL ??
+    (agentType ? (AGENT_MODELS[agentType] ?? FALLBACK_MODEL) : FALLBACK_MODEL);
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -174,7 +185,7 @@ router.post("/:type/generate", async (req, res) => {
     try {
       const promptFn = GENERATE_PROMPTS[type];
       if (!promptFn) throw new Error("No prompt for agent type");
-      const aiResponse = await askAi(promptFn(siteName || siteUrl || "your website"));
+      const aiResponse = await askAi(promptFn(siteName || siteUrl || "your website"), type);
 
       await db
         .update(agentTasksTable)
