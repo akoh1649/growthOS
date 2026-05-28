@@ -104,6 +104,11 @@ export default function DashboardScreen() {
     router.push(`/agent/${type}` as never);
   }, [router]);
 
+  const handleAnalyzePress = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push("/analyze" as never);
+  }, [router]);
+
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
 
@@ -157,9 +162,16 @@ export default function DashboardScreen() {
           <Text style={s.greeting}>Growth Dashboard</Text>
           <Text style={s.subtitle}>{data.sites.length} site{data.sites.length !== 1 ? "s" : ""} under management</Text>
         </View>
-        <View style={[s.logoContainer, { backgroundColor: colors.primary + "20", borderColor: colors.primary + "40" }]}>
-          <Feather name="trending-up" size={18} color={colors.primary} />
-        </View>
+        <Pressable
+          style={({ pressed }) => [
+            s.analyzeBtn,
+            { backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1 },
+          ]}
+          onPress={handleAnalyzePress}
+        >
+          <Feather name="zap" size={14} color={colors.primaryForeground} />
+          <Text style={[s.analyzeBtnText, { color: colors.primaryForeground }]}>Analyze</Text>
+        </Pressable>
       </View>
 
       <View style={s.kpiGrid}>
@@ -211,7 +223,14 @@ export default function DashboardScreen() {
           <View style={s.emptyState}>
             <Feather name="clock" size={28} color={colors.mutedForeground} />
             <Text style={s.emptyText}>No activity yet</Text>
-            <Text style={s.emptySubtext}>Run an analysis to get started</Text>
+            <Text style={s.emptySubtext}>Tap Analyze to crawl a site and get started</Text>
+            <Pressable
+              style={({ pressed }) => [s.emptyAnalyzeBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1 }]}
+              onPress={handleAnalyzePress}
+            >
+              <Feather name="zap" size={13} color={colors.primaryForeground} />
+              <Text style={[s.emptyAnalyzeBtnText, { color: colors.primaryForeground }]}>Analyze a Site</Text>
+            </Pressable>
           </View>
         )}
         {data.recentTasks.slice(0, 8).map((task, idx) => (
@@ -276,6 +295,10 @@ const makeStyles = (colors: ReturnType<typeof useColors>) =>
     greeting: { fontSize: 24, fontWeight: "700", color: colors.foreground, fontFamily: "Inter_700Bold" },
     subtitle: { fontSize: 13, color: colors.mutedForeground, marginTop: 2, fontFamily: "Inter_400Regular" },
     logoContainer: { width: 40, height: 40, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+    analyzeBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12 },
+    analyzeBtnText: { fontSize: 13, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
+    emptyAnalyzeBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, marginTop: 4 },
+    emptyAnalyzeBtnText: { fontSize: 13, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
     loadingText: { color: colors.mutedForeground, fontFamily: "Inter_400Regular", fontSize: 14 },
     errorText: { color: colors.destructive, fontFamily: "Inter_500Medium", fontSize: 15 },
     retryBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },

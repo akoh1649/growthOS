@@ -32,3 +32,36 @@ export async function generateContent(type: string) {
   if (!res.ok) throw new Error(json.error ?? `Generate failed: ${res.status}`);
   return json;
 }
+
+export interface SeoIssue {
+  type: string;
+  severity: "high" | "medium" | "low";
+  message: string;
+}
+
+export interface AnalyzeResult {
+  score: number;
+  issues: SeoIssue[];
+  title: string | null;
+  description: string | null;
+  headings: string[];
+  linksCount: number;
+  imagesCount: number;
+  loadTimeMs: number;
+  siteId: string;
+}
+
+export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
+  const res = await fetchWithTimeout(
+    `${getBaseUrl()}/api/analyze`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    },
+    30_000,
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? `Analyze failed: ${res.status}`);
+  return json.analysis as AnalyzeResult;
+}
