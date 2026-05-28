@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 
 import { useColors } from "@/hooks/useColors";
+import { useAppActive } from "@/hooks/useAppActive";
 import { AGENT_MAP, AgentType } from "@/constants/agents";
 import { fetchDashboard } from "@/lib/api";
 
@@ -92,11 +93,14 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const s = makeStyles(colors);
+  const isAppActive = useAppActive();
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
     queryFn: fetchDashboard,
     retry: 2,
+    refetchInterval: isAppActive ? 60_000 : false,
+    refetchIntervalInBackground: false,
   });
 
   const handleAgentPress = useCallback((type: string) => {

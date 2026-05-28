@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useColors } from "@/hooks/useColors";
+import { useAppActive } from "@/hooks/useAppActive";
 import { AGENT_MAP, AgentType } from "@/constants/agents";
 import { fetchAgent, generateContent } from "@/lib/api";
 
@@ -109,12 +110,15 @@ export default function AgentDetailScreen() {
   const colorMap = colors as unknown as Record<string, string>;
   const agentColor = colorMap[`agent${ck}`] ?? colors.primary;
   const agentBg = colorMap[`agent${ck}Bg`] ?? colors.muted;
+  const isAppActive = useAppActive();
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery<AgentData>({
     queryKey: ["agent", type],
     queryFn: () => fetchAgent(type!),
     enabled: !!type,
     retry: 2,
+    refetchInterval: isAppActive ? 30_000 : false,
+    refetchIntervalInBackground: false,
   });
 
   const mutation = useMutation({
