@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { aiKeyConfigured } from "./routes/agents";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,12 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  const keyReady = aiKeyConfigured();
+  const model = process.env.OPENROUTER_MODEL ?? "nvidia/nemotron-3-nano-30b-a3b:free";
+  if (keyReady) {
+    logger.info({ model }, "AI generation ready");
+  } else {
+    logger.warn("OPENROUTER_API_KEY not set — AI generation disabled. Add it in Replit Secrets.");
+  }
 });
