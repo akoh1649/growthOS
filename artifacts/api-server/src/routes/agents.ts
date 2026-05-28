@@ -59,7 +59,7 @@ export function aiKeyConfigured(): boolean {
   return !!(process.env.OPENROUTER_API_KEY ?? "");
 }
 
-async function askAi(prompt: string, agentType?: string): Promise<string> {
+async function askAi(prompt: string, modelOverride?: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY ?? "";
   if (!apiKey) {
     throw new Error(
@@ -67,8 +67,9 @@ async function askAi(prompt: string, agentType?: string): Promise<string> {
     );
   }
   const model =
+    modelOverride ??
     process.env.OPENROUTER_MODEL ??
-    (agentType ? (AGENT_MODELS[agentType] ?? FALLBACK_MODEL) : FALLBACK_MODEL);
+    FALLBACK_MODEL;
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -151,17 +152,19 @@ router.post("/:type/generate", async (req, res) => {
       return res.status(400).json({ error: "Invalid agent type" });
     }
 
-    // Ensure demo user exists
     await db
       .insert(usersTable)
       .values({ id: "demo-user", email: "demo@growthos.app", name: "Demo User" })
       .onConflictDoNothing();
 
-    // Get a site for context
+    const { input, model: selectedModel } = req.body ?? {};
+
     const sites = await db.select().from(sitesTable).limit(1).orderBy(desc(sitesTable.createdAt));
     const site = sites[0];
     const siteName = site?.name ?? "your website";
     const siteUrl = site?.url ?? "";
+
+    const context = input?.trim() || siteName || siteUrl || "your website";
 
     const taskTitle =
       type === "seo" ? "SEO Recommendations" :
@@ -179,20 +182,23 @@ router.post("/:type/generate", async (req, res) => {
       agentType: type,
       status: "running",
       title: taskTitle,
-      content: JSON.stringify({ status: "running", siteUrl, siteName }),
+      content: JSON.stringify({ status: "running", siteUrl: context, siteName: context }),
     });
+
+    const effectiveModel = selectedModel?.trim() || (
+      type ? (AGENT_MODELS[type] ?? FALLBACK_MODEL) : FALLBACK_MODEL
+    );
 
     try {
       const promptFn = GENERATE_PROMPTS[type];
       if (!promptFn) throw new Error("No prompt for agent type");
-      const aiResponse = await askAi(promptFn(siteName || siteUrl || "your website"), type);
+      const aiResponse = await askAi(promptFn(context), effectiveModel);
 
       await db
         .update(agentTasksTable)
         .set({ status: "completed", content: aiResponse, completedAt: new Date(), updatedAt: new Date() })
         .where(eq(agentTasksTable.id, taskId));
 
-      // Create content item for writer/reddit/x
       if (["writer", "reddit", "x"].includes(type)) {
         const contentTitle =
           type === "writer" ? `Blog Post - ${siteName}` :

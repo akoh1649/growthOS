@@ -17,14 +17,7 @@ export function Hero() {
     canvasEl.width = window.innerWidth
     canvasEl.height = window.innerHeight
 
-    const particles: {
-      x: number
-      y: number
-      vx: number
-      vy: number
-      size: number
-      opacity: number
-    }[] = []
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number }[] = []
     const count = 80
 
     for (let i = 0; i < count; i++) {
@@ -53,7 +46,6 @@ export function Hero() {
         ctx.fill()
       }
 
-      // Draw connections
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x
@@ -87,11 +79,9 @@ export function Hero() {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background */}
       <canvas ref={canvasRef} className="absolute inset-0 z-0" />
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background z-[1]" />
 
-      {/* Content */}
       <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-32 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-sm mb-8 animate-float">
           <Sparkles className="w-3.5 h-3.5" />
@@ -114,7 +104,7 @@ export function Hero() {
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
-            href="#dashboard"
+            href="/dashboard"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-emerald-950 font-semibold text-base hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 group"
           >
             Launch Your Growth OS
@@ -128,7 +118,6 @@ export function Hero() {
           </a>
         </div>
 
-        {/* Stats */}
         <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-3xl mx-auto">
           {[
             ["24/7", "Always On"],
