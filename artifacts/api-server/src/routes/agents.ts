@@ -44,11 +44,20 @@ const GENERATE_PROMPTS: Record<string, (siteName?: string) => string> = {
     `Write a tweet thread (5-7 tweets) for "${site}" that drives engagement. Hook tweet, valuable insights, clear call-to-action. Professional but approachable tone.`,
 };
 
+const DEFAULT_MODEL = "nvidia/nemotron-3-nano-30b-a3b:free";
+
+export function aiKeyConfigured(): boolean {
+  return !!(process.env.OPENROUTER_API_KEY ?? "");
+}
+
 async function askAi(prompt: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY ?? "";
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not set.");
+    throw new Error(
+      "OPENROUTER_API_KEY is not set. Add it in the Replit Secrets panel to enable AI generation."
+    );
   }
+  const model = process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL;
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -56,7 +65,7 @@ async function askAi(prompt: string): Promise<string> {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "nvidia/nemotron-3-nano-30b-a3b:free",
+      model,
       messages: [{ role: "user", content: prompt }],
       max_tokens: 512,
     }),
