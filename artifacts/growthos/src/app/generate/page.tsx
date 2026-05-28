@@ -27,6 +27,7 @@ const AGENTS = [
   { type: "reddit", name: "Reddit Scout", icon: MessageCircle, color: "border-orange-500/20", bg: "bg-orange-500/10", text: "text-orange-400", ring: "ring-orange-500/30", placeholder: "Topic or keyword to monitor", inputLabel: "Topic" },
   { type: "hackernews", name: "HN Launcher", icon: Newspaper, color: "border-red-500/20", bg: "bg-red-500/10", text: "text-red-400", ring: "ring-red-500/30", placeholder: "Your product or article", inputLabel: "Submission Title" },
   { type: "x", name: "X Presence", icon: AtSign, color: "border-sky-500/20", bg: "bg-sky-500/10", text: "text-sky-400", ring: "ring-sky-500/30", placeholder: "Campaign or topic", inputLabel: "Campaign Topic" },
+  { type: "support", name: "Customer Support", icon: MessageCircle, color: "border-teal-500/20", bg: "bg-teal-500/10", text: "text-teal-400", ring: "ring-teal-500/30", placeholder: "Ask a question about GrowthOS...", inputLabel: "Your Question" },
 ];
 
 const MODELS = [
@@ -98,7 +99,7 @@ export default function GeneratePage() {
 
         <div className="mb-8">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Select Agent</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
             {AGENTS.map((a) => {
               const Icon = a.icon;
               const isSelected = selectedAgent === a.type;
@@ -107,12 +108,12 @@ export default function GeneratePage() {
                   key={a.type}
                   onClick={() => setSelectedAgent(a.type)}
                   className={cn(
-                    "p-4 rounded-2xl border text-center transition-all duration-200",
+                    "p-3 sm:p-4 rounded-2xl border text-center transition-all duration-200",
                     isSelected ? `${a.bg} ${a.color} ring-2 ${a.ring}` : "border-white/5 bg-white/[0.02] hover:bg-white/[0.04]",
                   )}
                 >
-                  <Icon className={cn("w-6 h-6 mx-auto mb-2", isSelected ? a.text : "text-muted-foreground")} />
-                  <p className={cn("text-xs font-medium", isSelected ? a.text : "text-muted-foreground")}>
+                  <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2", isSelected ? a.text : "text-muted-foreground")} />
+                  <p className={cn("text-[10px] sm:text-xs font-medium", isSelected ? a.text : "text-muted-foreground")}>
                     {a.name.split(" ")[0]}
                   </p>
                 </button>
@@ -151,9 +152,7 @@ export default function GeneratePage() {
                   onClick={() => setModel(m.value)}
                   className={cn(
                     "text-xs px-3 py-1.5 rounded-lg border transition-all",
-                    model === m.value
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                      : "border-white/10 text-muted-foreground hover:border-white/20",
+                    model === m.value ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "border-white/10 text-muted-foreground hover:border-white/20",
                   )}
                 >
                   {m.label} <span className="opacity-60">{m.cost}</span>
@@ -166,9 +165,7 @@ export default function GeneratePage() {
               disabled={submitting || !input.trim()}
               className={cn(
                 "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all",
-                submitting || !input.trim()
-                  ? "bg-white/5 text-muted-foreground cursor-not-allowed"
-                  : "bg-emerald-500 text-black hover:bg-emerald-400 active:scale-[0.98]",
+                submitting || !input.trim() ? "bg-white/5 text-muted-foreground cursor-not-allowed" : "bg-emerald-500 text-black hover:bg-emerald-400 active:scale-[0.98]",
               )}
             >
               {submitting ? (

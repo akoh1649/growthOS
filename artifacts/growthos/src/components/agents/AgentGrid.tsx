@@ -77,6 +77,17 @@ const agents = [
     border: "border-sky-500/20",
     text: "text-sky-400",
   },
+  {
+    type: "support",
+    icon: MessageCircle,
+    name: "Customer Support",
+    description:
+      "Answers your GrowthOS questions, guides you through onboarding, suggests which agent to use, and helps with troubleshooting.",
+    color: "from-teal-500 to-cyan-400",
+    bg: "bg-teal-500/10",
+    border: "border-teal-500/20",
+    text: "text-teal-400",
+  },
 ]
 
 export function AgentsSection() {
@@ -91,7 +102,7 @@ export function AgentsSection() {
             </span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Six specialized AI agents working in parallel to drive traffic, users, and growth — 
+            Seven specialized AI agents working in parallel to drive traffic, users, and growth — 
             completely autonomous, always learning.
           </p>
         </div>

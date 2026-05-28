@@ -8,6 +8,7 @@ import {
 } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { buildSkillPrompt, AgentType } from "../lib/skill-prompts.js";
 
 const router = Router();
 
@@ -18,6 +19,7 @@ const AGENTS = [
   { type: "reddit", name: "Reddit Scout" },
   { type: "hackernews", name: "HN Launcher" },
   { type: "x", name: "X Presence" },
+  { type: "support", name: "Customer Support" },
 ];
 
 const AGENT_DESCRIPTIONS: Record<string, string> = {
@@ -27,21 +29,7 @@ const AGENT_DESCRIPTIONS: Record<string, string> = {
   reddit: "Monitors 100+ subreddits 24/7 for relevant discussions. Drafts authentic, helpful replies that drive organic traffic without spam.",
   hackernews: "Crafts compelling Hacker News Show HN posts with the perfect title, framing, and first comment to maximize your launch impact.",
   x: "Maintains your brand voice across X/Twitter. Generates threaded content, engagement replies, and consistent daily posting.",
-};
-
-const GENERATE_PROMPTS: Record<string, (siteName?: string) => string> = {
-  seo: (site = "your website") =>
-    `You are an SEO expert. Provide specific, actionable recommendations for optimizing "${site}". Include: keyword strategy, meta tag improvements, content structure, technical SEO, and backlink opportunities. Format as bullet points.`,
-  geo: (site = "your website") =>
-    `You are a GEO expert. Provide recommendations for optimizing "${site}" for AI search engines (ChatGPT, Claude, Perplexity, Gemini). Include: entity optimization, structured data, citation building, and LLM-friendly content formatting. Format as bullet points.`,
-  writer: (site = "your website") =>
-    `Write a high-quality, engaging blog post (400-600 words) for "${site}" that would drive organic traffic. Include a compelling title, introduction, structured body with subheadings, and a call-to-action conclusion.`,
-  reddit: (site = "your website") =>
-    `Draft an authentic, helpful Reddit reply about topics related to "${site}" that provides genuine value. Natural opening, useful information, subtle mention of the site. Keep it under 200 words.`,
-  hackernews: (site = "your website") =>
-    `Craft a compelling Hacker News "Show HN" post for "${site}". Include: attention-grabbing title (under 80 chars), a first comment explaining what you built and why it matters, and key differentiators. Focus on technical value.`,
-  x: (site = "your website") =>
-    `Write a tweet thread (5-7 tweets) for "${site}" that drives engagement. Hook tweet, valuable insights, clear call-to-action. Professional but approachable tone.`,
+  support: "Answers your GrowthOS questions, guides you through onboarding, suggests which agent to use for your goals, and helps with troubleshooting.",
 };
 
 const FALLBACK_MODEL = "google/gemma-4-26b-a4b-it";
@@ -53,6 +41,7 @@ const AGENT_MODELS: Record<string, string> = {
   reddit:      "qwen/qwen3.6-flash",
   hackernews:  "google/gemma-4-26b-a4b-it",
   x:           "qwen/qwen3.6-flash",
+  support:     "google/gemma-4-26b-a4b-it",
 };
 
 export function aiKeyConfigured(): boolean {
@@ -147,7 +136,7 @@ router.get("/:type", async (req, res) => {
 router.post("/:type/generate", async (req, res) => {
   try {
     const { type } = req.params;
-    const validTypes = ["seo", "geo", "writer", "reddit", "hackernews", "x"];
+    const validTypes = ["seo", "geo", "writer", "reddit", "hackernews", "x", "support"];
     if (!validTypes.includes(type)) {
       return res.status(400).json({ error: "Invalid agent type" });
     }
@@ -172,7 +161,9 @@ router.post("/:type/generate", async (req, res) => {
       type === "writer" ? "Blog Post Generation" :
       type === "reddit" ? "Reddit Reply Draft" :
       type === "hackernews" ? "HN Launch Post" :
-      "Tweet Thread";
+      type === "x" ? "Tweet Thread" :
+      type === "support" ? "Customer Support Response" :
+      "Generated Content";
 
     const taskId = randomUUID();
 
@@ -190,9 +181,10 @@ router.post("/:type/generate", async (req, res) => {
     );
 
     try {
-      const promptFn = GENERATE_PROMPTS[type];
-      if (!promptFn) throw new Error("No prompt for agent type");
-      const aiResponse = await askAi(promptFn(context), effectiveModel);
+      const aiResponse = await askAi(
+        buildSkillPrompt(type as AgentType, context, siteName),
+        effectiveModel
+      );
 
       await db
         .update(agentTasksTable)
