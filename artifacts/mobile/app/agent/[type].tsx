@@ -1,9 +1,11 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Platform,
   Pressable,
   RefreshControl,
@@ -62,6 +64,37 @@ const STATUS_ICON: Record<string, string> = {
   failed: "alert-circle",
 };
 
+const TASK_TITLE: Record<string, string> = {
+  seo: "SEO Recommendations",
+  geo: "GEO Analysis Report",
+  writer: "Blog Post Generation",
+  reddit: "Reddit Reply Draft",
+  hackernews: "HN Launch Post",
+  x: "Tweet Thread",
+};
+
+function SpinningIcon({ name, size, color }: { name: string; size: number; color: string }) {
+  const rotation = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [rotation]);
+  const spin = rotation.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+  return (
+    <Animated.View style={{ transform: [{ rotate: spin }] }}>
+      <Feather name={name as never} size={size} color={color} />
+    </Animated.View>
+  );
+}
+
 export default function AgentDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -86,17 +119,63 @@ export default function AgentDetailScreen() {
 
   const mutation = useMutation({
     mutationFn: () => generateContent(type!),
-    onSuccess: (json) => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setGenerateResult(json.content ?? json.task?.content ?? "Generated successfully!");
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["agent", type] });
+      const previous = queryClient.getQueryData<AgentData>(["agent", type]);
+      const optimisticId = `optimistic-${Date.now()}`;
+      const optimisticTask: Task = {
+        id: optimisticId,
+        agentType: type!,
+        title: TASK_TITLE[type!] ?? "Generating…",
+        status: "running",
+        content: null,
+        createdAt: new Date().toISOString(),
+        completedAt: null,
+      };
+      queryClient.setQueryData<AgentData>(["agent", type], (old) => {
+        if (!old) return old;
+        return { ...old, tasks: [optimisticTask, ...old.tasks] };
+      });
+      setGenerateResult(null);
       setGenerateError(null);
-      queryClient.invalidateQueries({ queryKey: ["agent", type] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      return { previous, optimisticId };
     },
-    onError: (err: Error) => {
+    onSuccess: (json, _vars, context) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const content = json.content ?? json.task?.content ?? "Generated successfully!";
+      setGenerateResult(content);
+      setGenerateError(null);
+      queryClient.setQueryData<AgentData>(["agent", type], (old) => {
+        if (!old || !context) return old;
+        return {
+          ...old,
+          tasks: old.tasks.map((t) =>
+            t.id === context.optimisticId
+              ? { ...t, status: "completed", content, completedAt: new Date().toISOString() }
+              : t
+          ),
+        };
+      });
+    },
+    onError: (err: Error, _vars, context) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setGenerateError(err.message);
       setGenerateResult(null);
+      queryClient.setQueryData<AgentData>(["agent", type], (old) => {
+        if (!old || !context) return old;
+        return {
+          ...old,
+          tasks: old.tasks.map((t) =>
+            t.id === context.optimisticId
+              ? { ...t, status: "failed", content: err.message }
+              : t
+          ),
+        };
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["agent", type] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
@@ -222,7 +301,11 @@ export default function AgentDetailScreen() {
                     <Text style={s.taskTime}>{formatDate(task.createdAt)}</Text>
                   </View>
                   <View style={[s.statusBadge, { backgroundColor: statusColor + "20" }]}>
-                    <Feather name={iconName as never} size={11} color={statusColor} />
+                    {task.status === "running" ? (
+                      <SpinningIcon name={iconName} size={11} color={statusColor} />
+                    ) : (
+                      <Feather name={iconName as never} size={11} color={statusColor} />
+                    )}
                     <Text style={[s.statusText, { color: statusColor }]}>{task.status}</Text>
                   </View>
                 </View>
