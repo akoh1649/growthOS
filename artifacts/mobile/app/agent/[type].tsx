@@ -21,6 +21,7 @@ import { useColors } from "@/hooks/useColors";
 import { useAppActive } from "@/hooks/useAppActive";
 import { AGENT_MAP, AgentType } from "@/constants/agents";
 import { fetchAgent, generateContent } from "@/lib/api";
+import { scheduleGenerationNotification } from "@/lib/notifications";
 
 interface Task {
   id: string;
@@ -160,6 +161,9 @@ export default function AgentDetailScreen() {
           ),
         };
       });
+      if (agent && type) {
+        scheduleGenerationNotification(agent.name, type);
+      }
     },
     onError: (err: Error, _vars, context) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
