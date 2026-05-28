@@ -1,0 +1,1 @@
+- [Expo mobile workflow detection](expo-mobile-workflow-detection.md) — kind="mobile" detection always fails: checks Expo relay (unreachable from container), not local port. QR-code native experience still works.
