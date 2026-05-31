@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Link, useParams } from "wouter";
+import { Switch, Route, Router as WouterRouter, Link } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Header } from "./components/layout/Header";
 import { Hero } from "./components/layout/Hero";
@@ -7,10 +7,10 @@ import { FeaturesSection } from "./components/layout/FeaturesSection";
 import { PricingSection } from "./components/layout/PricingSection";
 import { CTASection } from "./components/layout/CTASection";
 import { Footer } from "./components/layout/Footer";
-import DashboardPage from "./app/dashboard/page";
-import AgentDetailPage from "./app/agents/[type]/page";
-import AnalyticsPage from "./app/analytics/page";
-import GeneratePage from "./app/generate/page";
+import { DashboardPage } from "./pages/DashboardPage";
+import { AgentsPage } from "./pages/AgentsPage";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
+import { GeneratePage } from "./pages/GeneratePage";
 
 const queryClient = new QueryClient();
 
@@ -37,7 +37,7 @@ function Router() {
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/generate" component={GeneratePage} />
-      <Route path="/agents/:type" component={AgentDetailPage} />
+      <Route path="/agents/:type" component={AgentsPage} />
       <Route>
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center">
