@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -e
+echo "📦 Deploying CMO Backlink Agent..."
+mkdir -p artifacts/api-server/src/lib
+
+# ── 1. HARO Scraper ──
+cat > artifacts/api-server/src/lib/haro-scraper.ts << 'EOF'
+import { load } from "cheerio";
+export interface HaroQuery { id: string; title: string; category: string; deadline: string; details: string; requirements: string[]; }
+export class HaroScraper {
+  private categories = ["business-finance","healthcare-wellness","technology-ai","marketing-pr","lifestyle-travel"];
+  async fetchQueries(keywords: string[]): Promise<HaroQuery[]> {
+    const results: HaroQuery[] = [];
+    for (const cat of this.categories) {
+      try {
+        const url = `https://www.helpareporter.com/category/${cat}/`;
+        const $ = load(await (await fetch(url, { headers: { "User-Agent": "GrowthOS/1.0" } })).text());
+        $(".query-item").each((_, el) => {
+          const title = $(el).find(".query-title").text().trim();
+          if (keywords.some(k => title.toLowerCase().includes(k.toLowerCase())))
+            results.push({ id: $(el).attr("data-id")||crypto.randomUUID(), title, category: cat, deadline: $(el).find(".deadline").text().trim(), details: $(el).find(".query-details").text().trim(), requirements: $(el).find(".requirements li").map((_,li)=>$(li).text().trim()).get() });
+        });
+      } catch(e) { console.error(`HARO [${cat}]:`, e); }
+    }
+    return results;
+  }
+}
+EOF
+echo "  ✅ haro-scraper.ts"
+
+# ── 2. HARO Pitch ──
+cat > artifacts/api-server/src/lib/haro-pitch.ts << 'EOF'
+export interface PitchRequest { query:string; publication:string; expertName:string; credentials:string; angle:string; }
+export interface PitchResponse { subject:string; pitch:string; quote:string; suggestedLinks:string[]; }
+export async function generateHaroPitch(req:PitchRequest, key:string): Promise<PitchResponse> {
+  const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method:"POST", headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"google/gemma-4-26b-a4b-it", messages:[{role:"user", content:`HARO pitch for ${req.publication}. Query: "${req.query}". Expert: ${req.expertName} (${req.credentials}). Angle: ${req.angle}. Subject<10w, pitch<150w, include quote, 2-3 links. Return JSON with: subject, pitch, quote, suggestedLinks.`}], response_format:{type:"json_object"} })
+  });
+  return JSON.parse((await r.json()).choices[0].message.content);
+}
+EOF
+echo "  ✅ haro-pitch.ts"
+
+# ── 3. Broken Link Checker ──
+cat > artifacts/api-server/src/lib/broken-link-checker.ts << 'EOF'
+import { load } from "cheerio";
+export interface BrokenLink { url:string; statusCode:number; foundOn:string; anchorText:string; }
+export interface BrokenLinkReport { targetUrl:string; brokenLinks:BrokenLink[]; totalChecked:number; linkableAssets:string[]; }
+export class BrokenLinkChecker {
+  private ua = "GrowthOS/1.0";
+  async scan(url:string): Promise<BrokenLinkReport> {
+    const $ = load(await (await fetch(url,{headers:{"User-Agent":this.ua}})).text());
+    const links:{href:string;text:string}[]=[]; const linkable:string[]=[];
+    $("a[href]").each((_,el)=>{ const h=$(el).attr("href")||"", t=$(el).text().trim(); if(h.startsWith("http")||h.startsWith("//")) links.push({href:h.replace(/^\/\//,"https://"),text:t}); if(h.includes("/resource")||h.includes("/blog/")||h.includes("/whitepaper")) linkable.push(h); });
+    const broken:BrokenLink[]=[];
+    for(let i=0;i<links.length;i+=5){ const r=await Promise.allSettled(links.slice(i,i+5).map(l=>this.check(l.href,url,l.text))); r.forEach(x=>{if(x.status==="fulfilled"&&x.value)broken.push(x.value);}); }
+    return {targetUrl:url,brokenLinks:broken,totalChecked:links.length,linkableAssets:[...new Set(linkable)]};
+  }
+  private async check(href:string,src:string,txt:string): Promise<BrokenLink|null> {

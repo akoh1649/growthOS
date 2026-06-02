@@ -11,6 +11,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { AgentsPage } from "./pages/AgentsPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { GeneratePage } from "./pages/GeneratePage";
+import { CmoDashboardPage } from "./pages/CmoDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/generate" component={GeneratePage} />
       <Route path="/agents/:type" component={AgentsPage} />
+      <Route path="/cmo" component={CmoDashboardPage} />
       <Route>
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center">

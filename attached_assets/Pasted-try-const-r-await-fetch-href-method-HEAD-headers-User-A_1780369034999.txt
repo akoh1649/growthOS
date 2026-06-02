@@ -1,0 +1,40 @@
+try{ const r=await fetch(href,{method:"HEAD",headers:{"User-Agent":this.ua},signal:AbortSignal.timeout(5000)}); return r.status>=400?{url:href,statusCode:r.status,foundOn:src,anchorText:txt}:null; }
+    catch{ return {url:href,statusCode:0,foundOn:src,anchorText:txt}; }
+  }
+}
+EOF
+echo "  ✅ broken-link-checker.ts"
+
+# ── 4. CMO Routes ──
+cat > artifacts/api-server/src/routes/cmo.ts << 'EOF'
+import { Router } from "express";
+import { HaroScraper } from "../lib/haro-scraper";
+import { generateHaroPitch } from "../lib/haro-pitch";
+import { BrokenLinkChecker } from "../lib/broken-link-checker";
+const router=Router(); const haro=new HaroScraper(); const bl=new BrokenLinkChecker();
+router.post("/cmo/evaluate",async(req,res)=>{ const{domain,niche,competitors,budgetTier}=req.body; const key=process.env.OPENROUTER_API_KEY; const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify({model:"deepseek/deepseek-v4-flash",messages:[{role:"user",content:`Evaluate backlinks for ${domain} (${niche}). Budget: ${budgetTier||"growth"}. Competitors: ${(competitors||[]).join(", ")||"N/A"}. Return JSON: domain_authority_estimate, recommended_tactics (tactic,priority 1-5,effort_days,links/month), competitor_gaps, quarterly_plan, budget_recommendation.`}],response_format:{type:"json_object"}})}); res.json(JSON.parse((await r.json()).choices[0].message.content)); });
+router.post("/cmo/haro/fetch",async(req,res)=>{res.json({queries:await haro.fetchQueries(req.body.keywords||[]),count:0});});
+router.post("/cmo/haro/pitch",async(req,res)=>{res.json(await generateHaroPitch(req.body,process.env.OPENROUTER_API_KEY!));});
+router.post("/cmo/broken-links/scan",async(req,res)=>{res.json(await bl.scan(req.body.url));});
+export default router;
+EOF
+echo "  ✅ cmo.ts"
+
+# ── 5. Register in index.ts ──
+if ! grep -q "cmoRouter" artifacts/api-server/src/routes/index.ts 2>/dev/null; then
+  sed -i 's/import analyzeRouter from ".\/analyze";/import analyzeRouter from ".\/analyze";\nimport cmoRouter from ".\/cmo";/' artifacts/api-server/src/routes/index.ts
+  sed -i 's/router.use("\/analyze", analyzeRouter);/router.use("\/analyze", analyzeRouter);\nrouter.use("\/agents", cmoRouter);/' artifacts/api-server/src/routes/index.ts
+  echo "  ✅ index.ts updated"
+else
+  echo "  ⏭️  cmoRouter already registered"
+fi
+
+# ── 6. CMO Dashboard UI ──
+mkdir -p "artifacts/growthos/src/app/(app)/cmo"
+cat > "artifacts/growthos/src/app/(app)/cmo/page.tsx" << 'EOF'
+import { CmoDashboard } from "./cmo-dashboard";
+export default function CmoPage() { return <div className="space-y-6"><h1 className="text-3xl font-bold">CMO Dashboard</h1><p className="text-muted-foreground">AI-powered backlink strategy orchestration</p><CmoDashboard /></div>; }
+EOF
+cat > "artifacts/growthos/src/app/(app)/cmo/cmo-dashboard.tsx" << 'EOF'
+import { useState } from "react"; import { useMutation } from "@tanstack/react-query";
+import { Card,CardContent,CardHeader,CardTitle } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Tabs,TabsContent,TabsList,TabsTrigger } from "@/components/ui/tabs"; import { Badge } from "@/components/ui/badge";

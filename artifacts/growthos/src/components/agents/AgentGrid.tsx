@@ -7,6 +7,7 @@ import {
   MessageCircle,
   Newspaper,
   AtSign,
+  Link,
   ArrowRight,
 } from "lucide-react"
 
@@ -88,6 +89,17 @@ const agents = [
     border: "border-teal-500/20",
     text: "text-teal-400",
   },
+  {
+    type: "cmo",
+    icon: Link,
+    name: "CMO Backlink",
+    description:
+      "Evaluates backlink opportunities, fetches HARO journalist queries, scans competitors for broken links, and pitches high-authority placements.",
+    color: "from-emerald-500 to-green-400",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    text: "text-emerald-400",
+  },
 ]
 
 export function AgentsSection() {
@@ -102,7 +114,7 @@ export function AgentsSection() {
             </span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Seven specialized AI agents working in parallel to drive traffic, users, and growth — 
+            Eight specialized AI agents working in parallel to drive traffic, users, and growth — 
             completely autonomous, always learning.
           </p>
         </div>
